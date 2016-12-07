@@ -1,0 +1,68 @@
+/*
+ * ******************************************************************************
+ *
+ * Copyright (C) 2002-2016 by Pentaho : http://www.pentaho.com
+ *
+ * ******************************************************************************
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.maven.plugin.dependency.tree;
+
+import org.apache.maven.shared.dependency.graph.DependencyNode;
+import org.apache.maven.shared.dependency.graph.traversal.DependencyNodeVisitor;
+import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.T;
+import org.apache.tinkerpop.gremlin.structure.Vertex;
+
+import java.io.Writer;
+
+/**
+ * Created by rfellows on 12/6/16.
+ */
+public class TinkerPopNodeVisitor
+  extends AbstractSerializingVisitor
+  implements DependencyNodeVisitor {
+
+  Graph graph;
+
+  public TinkerPopNodeVisitor( Writer writer, Graph graph ) {
+    super( writer );
+    this.graph = graph;
+  }
+
+  public boolean visit( DependencyNode dependencyNode ) {
+    System.out.println( "VISIT FOR: " +  dependencyNode.toNodeString() );
+    String id = dependencyNode.getArtifact().getGroupId() + ":" + dependencyNode.getArtifact().getArtifactId();
+    Vertex node = graph.addVertex( T.label, dependencyNode.getArtifact().getArtifactId(),
+      T.id, id,
+      "groupId", dependencyNode.getArtifact().getGroupId(),
+      "artifactId", dependencyNode.getArtifact().getArtifactId(),
+      "version", dependencyNode.getArtifact().getVersion() );
+    return true;
+  }
+
+  public boolean endVisit( DependencyNode dependencyNode ) {
+    if ( dependencyNode.getParent() == null || dependencyNode.getParent() == dependencyNode ) {
+      // nothing to do here
+      System.out.println( "No Parent" );
+    } else {
+      // create the edge
+      System.out.println( "END VISIT FOR: " +  dependencyNode.toNodeString() );
+    }
+
+    return true;
+  }
+
+}
